@@ -7,12 +7,18 @@
 
     /* 3. Ніжно-рожевий колір (кнопки, шапка) */
     --pink-color: #E89BA7;
+    --pink-btn-hover: #C43D4E;
 
     /* 4. Золотий колір (ціни, акценти, підсумок) */
     --gold-color: #D4AF37;
 
     /* Додатковий колір для межі карток */
     --border-color: #E6DCD3;
+
+    /* Позначення пріоритетів */
+    --priority-high: #E74C3C;
+    --priority-medium: #F39C12;
+    --priority-low: #2ECC71;
 }
 
 *, *::before, *::after {
@@ -35,7 +41,7 @@ img {
 
 header {
     background-color: var(--pink-color);
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 2rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -43,7 +49,7 @@ header {
 }
 
 header h1 {
-    color: #fff;
+    color: #fff
 }
 
 nav {
@@ -55,9 +61,14 @@ nav {
 
 nav a {
     color: #fff;
-    margin-right: 1rem;
     font-weight: 500;
     text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--pink-btn-hover);
+    text-decoration: underline;
 }
 
 .layout {
@@ -70,12 +81,77 @@ main {
     width: 100%;
 }
 
+/* 
+    ОБҐРУНТУВАННЯ НЕЧІТКОЇ ВИМОГИ:
+    Кнопка має м'який акцентний колір (--pink-color), який вирізняється на тлі бекграунда.
+    При наведенні (hover) спрацьовує зміна кольору, легкий підйом вгору (translateY)
+    та поява тіні, що створює інтерактивний ефект на дію користувача. 
+    Зміна коліру на --pink-btn-color підвищує контрастність відносно білого тексту, 
+    створює чіткий зоровий сигнал про активність елемента та забезпечує 
+    високий коефіцієнт контрасту за стандартом WCAG (понад 4.5:1).
+*/
+
+.btn-add {
+    background-color: var(--pink-color);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 4px 6px rgba(224, 82, 99, 0.2);
+}
+
+.btn-add:hover {
+    background-color: var(--pink-btn-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(224, 82, 99, 0.3);
+}
+
 article {
     background-color: #fff;
     padding: 14px; 
-    border: 1px solid var(--border-color);
+    border: 2px solid var(--border-color);
     border-radius: 10px;
     margin-bottom: 1rem;
+    transition: all 0.3s ease;
+}
+
+.priority-high {
+    border-left-color: var(--priority-high);
+}
+
+.priority-medium {
+    border-left-color: var(--priority-medium);
+}
+
+.priority-low {
+    border-left-color: var(--priority-low);
+}
+
+.priority-high:hover {
+    border-color: var(--priority-high);
+}
+
+.priority-medium:hover {
+    border-color: var(--priority-medium);
+}
+
+.priority-low:hover {
+    border-color: var(--priority-low);
+}
+
+article h3 {
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+article p {
+    font-size: 1.5rem;
+    font-weight: 900;
 }
 
 article.bought {
@@ -117,7 +193,7 @@ footer {
     padding: 0.5rem 1rem;
     text-align: center;
     color: #7A6E6E;
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--gold-color);
 }
 
 @media (min-width: 600px) {

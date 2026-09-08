@@ -15,43 +15,53 @@
             <a href="#list-wishes">Мої бажання</a>
         </nav>
     </header>
-    <main>
-        <!-- форма додавання нового бажання -->
-        <section id="add-wishes">
-            <h2>Додати бажання</h2>
-            <form action="#">
-                <div>
-                    <label for="wish-title">Назва бажання:</label>
-                    <input type="text" id="wish-title" name="title" placeholder="Наприклад: Ноутбук">
-                </div>
-                <div>
-                    <label for="wish-price">Ціна:</label>
-                    <input type="number" id="wish-price" name="price" placeholder="1000">
-                </div>
-                <button type="submit">Додати у список</button>
-            </form>
-        </section>
 
-        <!-- список бажаних речей (картки з ціною й пріоритетом) -->
-        <section id="list-wishes">
-            <h2>Мої бажання</h2>
-            <article class="bought">
-                <h3>Машина</h3>
-                <p>18000 доларів</p>
-            </article>
-            <article>
-                <h3>Яхта</h3>
-                <p>38000 доларів</p>
-            </article>
-        </section>
-    </main>
+    <div class="layout">
+        <main>
+            <!-- форма додавання нового бажання -->
+            <section id="add-wishes">
+                <h2>Додати бажання</h2>
+                <form action="#">
+                    <div>
+                        <label for="wish-title">Назва бажання:</label>
+                        <input type="text" id="wish-title" name="title" placeholder="Наприклад: Ноутбук">
+                    </div>
+                    <div>
+                        <label for="wish-price">Ціна:</label>
+                        <input type="number" id="wish-price" name="price" placeholder="1000">
+                    </div>
+                    <button type="submit">Додати у список</button>
+                </form>
+            </section>
 
-    <!-- блок підсумкової суми -->
-    <aside id="result">
-        <h2>Підсумкова сума</h2>
-        <img src="assets/img/genie-lamp.png" alt="Лампа джина">
-        <p>Загальна вартість: 56 000 $</p>
-    </aside>
+            <!-- список бажаних речей (картки з ціною й пріоритетом) -->
+            <section id="list-wishes">
+                <h2>Мої бажання</h2>
+                <div class="cards">
+                    <article class="bought">
+                        <h3>Машина</h3>
+                        <p>18000 доларів</p>
+                    </article>
+                    <article>
+                        <h3>Яхта</h3>
+                        <p>38000 доларів</p>
+                    </article>
+                    <article>
+                        <h3>Ноутбук</h3>
+                        <p>500 доларів</p>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <!-- блок підсумкової суми -->
+        <aside id="result">
+            <h2>Підсумкова сума</h2>
+            <img src="assets/img/genie-lamp.png" alt="Лампа джина">
+            <p>Загальна вартість:</p>
+            <p>56 500 $</p>
+        </aside>
+    </div>
 
     <!-- Підвал -->
     <footer>

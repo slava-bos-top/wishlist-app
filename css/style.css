@@ -28,30 +28,46 @@ body {
     background-color: var(--bg-cream);
 }
 
+img {
+    max-width: 100%;
+    height: auto;
+}
+
 header {
     background-color: var(--pink-color);
-    padding: 1.5rem 1rem;
-    text-align: center;
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
 }
 
 header h1 {
     color: #fff;
 }
 
+nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+}
+
 nav a {
     color: #fff;
     margin-right: 1rem;
     font-weight: 500;
+    text-decoration: none;
 }
 
-nav a:last-child {
-    margin-right: 0;
+.layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
 }
 
 main {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
+    width: 100%;
 }
 
 article {
@@ -70,12 +86,18 @@ article.bought h3 {
     text-decoration: line-through;
 }
 
+.cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+}
+
 aside {
     background-color: #fff;
     padding: 1.5rem;
     border: 2px solid var(--gold-color);
     border-radius: 10px;
-    margin-top: 2rem;
+    margin: 2rem 0rem;
     text-align: center;
 }
 
@@ -84,22 +106,46 @@ aside h2 {
     font-size: 1.2rem;
 }
 
-aside img {
-    width: 10rem;
-}
-
 aside p {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: bold;
     color: var(--gold-color);
     margin: 0;
 }
 
 footer {
-    padding: 1rem;
+    padding: 0.5rem 1rem;
     text-align: center;
     color: #7A6E6E;
     border-top: 1px solid var(--border-color);
+}
+
+@media (min-width: 600px) {
+    header, .site-header {
+        flex-direction: row;
+        justify-content: space-between;
+    }
+
+    .cards { 
+        grid-template-columns: repeat(2, 1fr); 
+    }
+}
+
+@media (min-width: 1024px) {
+    .cards { 
+        grid-template-columns: repeat(3, 1fr); 
+    }
+
+    .layout { 
+        display: grid;
+        grid-template-columns: 3fr 1fr; 
+        gap: 24px; 
+        align-items: start;
+    }
+
+    aside {
+        margin-top: 0;
+    }
 }
 
 

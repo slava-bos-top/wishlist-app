@@ -8,6 +8,54 @@ const wishes = [
     { title: "Ноутбук", price: 500, priority: "низький" }
 ];
 
+// Видалення статичного прикладного елемента
+const staticCard = document.querySelector('#wishlist article');
+if (staticCard) {
+    staticCard.remove();
+}
+
+// Вибір контейнера для списку бажань
+const listContainer = document.querySelector('#wishlist');
+
+function renderWishes(data) {
+    // Очищення контейнера перед малюванням
+    listContainer.innerHTML = '';
+
+    data.forEach(wish => {
+        // Створення елемента article для картки
+        const card = document.createElement('article');
+
+        // Встановлення атрибута data-priority
+        card.dataset.priority = wish.priority;
+
+        // Додавання класу за умовою
+        if (wish.priority === 'високий') {
+            card.classList.add('priority-high');
+        } else if (wish.priority === 'середній') {
+            card.classList.add('priority-medium');
+        } else {
+            card.classList.add('priority-low');
+        }
+
+        // Створення заголовка h3
+        const title = document.createElement('h3');
+        title.textContent = wish.title;
+
+        // Створення абзацу p з ціною
+        const price = document.createElement('p');
+        price.textContent = `${wish.price} $`;
+
+        // Вкладення елементів у картку
+        card.append(title, price);
+
+        // Додавання готової картки в контейнер
+        listContainer.append(card);
+    });
+}
+
+// Виклики функції рендеру
+renderWishes(wishes);
+
 // Обчислення загальної вартості
 function calculateTotalSum(data) {
     let sum = 0;
@@ -15,6 +63,13 @@ function calculateTotalSum(data) {
         sum += i.price;
     }
     return sum;
+}
+
+// Оновлення текстового вмісту в елементі p#total-price
+const totalPriceElement = document.querySelector('#total-price');
+if (totalPriceElement) {
+    const totalSum = calculateTotalSum(wishes);
+    totalPriceElement.textContent = `${totalSum} $`;
 }
 
 // Усі бажання з високим пріоритетом

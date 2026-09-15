@@ -18,6 +18,9 @@ const titleInput = document.querySelector('#wish-title');
 const priceInput = document.querySelector('#wish-price');
 const prioritySelect = document.querySelector('#wish-priority');
 
+// json файл API (https://jsonplaceholder.typicode.com/todos?userId=2)
+const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=2"
+
 // Видалення елемента
 const staticCard = document.querySelector('#wishlist article');
 if (staticCard) {
@@ -128,6 +131,69 @@ function updateCardPriorityClass(card, priority) {
         card.classList.add('priority-low');
     }
 }
+
+// Отримуємо елементи для відображення статусу та помилок
+const statusMessage = document.querySelector('#status-message');
+const refreshBtn = document.querySelector('#btn-refresh');
+
+// Функція відображення стану завантаження
+function showLoading(isLoading) {
+    if (isLoading) {
+        statusMessage.textContent = 'Завантаження даних...';
+        if (refreshBtn) {
+            refreshBtn.disabled = true; // Блокуємо кнопку під час запиту
+        }
+    } else {
+        if (refreshBtn) {
+            refreshBtn.disabled = false; // Розблоковуємо після завершення
+        }
+    }
+}
+
+// Функція відображення помилки
+function showError(message) {
+    statusMessage.textContent = message;
+    statusMessage.style.color = 'red';
+}
+
+// Асинхронна функція завантаження даних
+async function loadData() {
+    showLoading(true);
+    try {
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+            throw new Error(`Сервер відповів кодом ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const formattedWishes = data.map((item, index) => ({
+            title: item.title,
+            price: (index + 1) * 100, // Генеруємо умовну ціну
+            priority: item.completed ? 'низький' : 'високий' // пріоритет(демонстрація)
+        }));
+
+        wishes.length = 0;
+        wishes.push(...formattedWishes);
+        statusMessage.textContent = '';
+
+        renderWishes(wishes);
+
+    } catch (error) {
+        showError('Не вдалося завантажити дані. Перевірте з’єднання та спробуйте пізніше.');
+        console.error('Деталі помилки для розробника:', error);
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Оновити для кнопкиі
+if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadData);
+}
+
+loadData();
 
 console.log(`${calculateTotalSum(wishes)}`);
 resultByPriority(wishes);

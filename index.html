@@ -5,72 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список бажань</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="js/app.js" defer></script>
+    <script type="text/babel" src="js/app.js" defer></script>
+    <!-- React 18 + Babel standalone для JSX прямо в браузері -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-    <!-- Шапка з назвою застосунку -->
-    <header>
-        <h1>Список бажань</h1>
-        <nav>
-            <a href="#add-wishes">Додати бажання</a>
-            <a href="#list-wishes">Мої бажання</a>
-        </nav>
-    </header>
-
-    <div class="layout">
-        <main>
-            <!-- форма додавання нового бажання -->
-            <section id="add-wishes">
-                <h2>Додати бажання</h2>
-                <form id="wish-list" action="#">
-                    <div>
-                        <label for="wish-title">Назва бажання:</label>
-                        <input type="text" id="wish-title" name="title" placeholder="Наприклад: Ноутбук" required>
-                    </div>
-                    <div>
-                        <label for="wish-price">Ціна:</label>
-                        <input type="number" id="wish-price" name="price" placeholder="1000" min="0" required>
-                    </div>
-                    <div>
-                        <label for="wish-priority">Пріоритет:</label>
-                        <select id="wish-priority" name="priority" required>
-                            <option value="високий">Високий</option>
-                            <option value="середній" selected>Середній</option>
-                            <option value="низький">Низький</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn-add">Додати у список</button>
-                </form>
-            </section>
-
-            <!-- список бажаних речей (картки з ціною й пріоритетом) -->
-            <section id="list-wishes">
-                <h2>Мої бажання</h2>
-                <div id="load">
-                    <div id="status-message"></div>
-                    <button id="btn-refresh" type="button" class="btn-add">Оновити дані з сервера</button>
-                </div>
-                <div class="cards" id="wishlist">
-                    <article class="bought priority-high">
-                        <h3>Машина</h3>
-                        <p>18000 доларів</p>
-                    </article>
-                </div>
-            </section>
-        </main>
-
-        <!-- блок підсумкової суми -->
-        <aside id="result">
-            <h2>Підсумкова сума</h2>
-            <img src="assets/img/genie-lamp.png" alt="Лампа джина">
-            <p>Загальна вартість:</p>
-            <p id="total-price">56 500 $</p>
-        </aside>
-    </div>
-
-    <!-- Підвал -->
-    <footer>
-        <p>Дані підготовлені Рибачиком Вячеславом</p>
-    </footer>
+    <div id="root"></div>
 </body>
 </html>

@@ -206,9 +206,97 @@
 // json файл API (https://jsonplaceholder.typicode.com/todos?userId=2)
 const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=2"
 
+// Допоміжні функції для localStorage
+function saveToLocalStorage(items) {
+  try {
+    localStorage.setItem('wishes', JSON.stringify(items));
+  } catch (e) {
+    console.error('Помилка запису в localStorage:', e);
+  }
+}
+
+function loadFromLocalStorage() {
+  try {
+    const raw = localStorage.getItem('wishes');
+    return raw ? JSON.parse(raw) : [];
+  } catch (error) {
+    console.error('Пошкоджені дані в localStorage:', error);
+    return [];
+  }
+}
+
+function openDB() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('AppDB', 1);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('wishes')) {
+                db.createObjectStore('wishes', { keyPath: 'id' });
+            }
+        };
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Оновлення або додавання елемента
+async function putItem(item) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('wishes', 'readwrite');
+    tx.objectStore('wishes').put(item);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getAllItems() {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+        const tx = db.transaction('wishes', 'readonly');
+        const request = tx.objectStore('wishes').getAll();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+    });
+}
+
+// Видалення елемента за id (потрібно за варіантом)
+async function deleteItem(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('wishes', 'readwrite');
+    tx.objectStore('wishes').delete(id);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function migrateFromLocalStorageIfNeeded() {
+  const isMigrated = localStorage.getItem('wishlist_migrated');
+  if (isMigrated) return; // Міграція вже була виконана раніше
+
+  try {
+    const dbItems = await getAllItems();
+    const localItems = loadFromLocalStorage();
+
+    // Якщо в IndexedDB порожньо, а в localStorage є дані
+    if (dbItems.length === 0 && localItems.length > 0) {
+      for (const item of localItems) {
+        await putItem(item);
+      }
+      console.log('Дані успішно мігровано з localStorage до IndexedDB');
+    }
+
+    // Позначаємо, що міграція відбулася
+    localStorage.setItem('wishlist_migrated', 'true');
+  } catch (err) {
+    console.error('Помилка під час міграції даних:', err);
+  }
+}
+
 // Дочірній компонент елемента
 // Props: id, name, price, priority, isPurchased, onToggle, onChangePriority
-function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePriority }) {
+function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePriority, onDelete }) {
     let priorityClass = 'priority-medium';
     if (priority === 'високий') {
         priorityClass = 'priority-high';
@@ -241,6 +329,14 @@ function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePr
                 />
                 <span>{isPurchased ? 'Придбано' : 'Ще не придбано'}</span>
             </label>
+            <button 
+                type="button" 
+                onClick={() => onDelete(id)} 
+                className="btn-delete"
+                style={{ marginTop: '10px', backgroundColor: '#e74c3c', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '4px', cursor: 'pointer' }}
+            >
+                Видалити
+            </button>
         </article>
     );
 }
@@ -260,16 +356,62 @@ function WishlistApp() {
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState('');
 
-    function toggleWish(id) {
-        setWishes(wishes.map(item => 
+    React.useEffect(() => {
+        async function initData() {
+            setLoading(true);
+            try {
+            // 1. Виконуємо міграцію
+            await migrateFromLocalStorageIfNeeded();
+
+            // 2. Отримуємо актуальні дані з IndexedDB
+            let items = await getAllItems();
+
+            // Якщо БД порожня — ініціалізуємо базовими значеннями
+            if (items.length === 0) {
+                items = [
+                { id: 1, title: "Машина", price: 18000, priority: "високий", purchased: false },
+                { id: 2, title: "Яхта", price: 38000, priority: "середній", purchased: false },
+                { id: 3, title: "Ноутбук", price: 500, priority: "низький", purchased: true }
+                ];
+                for (const item of items) {
+                await putItem(item);
+                }
+            }
+
+            setWishes(items);
+            saveToLocalStorage(items);
+            } catch (err) {
+            // Крок 11: Зрозуміле повідомлення про помилку IndexedDB
+            setError('Не вдалося відкрити сховище IndexedDB. Перевірте, чи не увімкнено приватний режим.');
+            console.error(err);
+            } finally {
+            setLoading(false);
+            }
+        }
+
+        initData();
+    }, []);
+
+    async function toggleWish(id) {
+        const updated = wishes.map(item => 
             item.id === id ? { ...item, purchased: !item.purchased } : item
-        ));
+        );
+        const updatedItem = updated.find(item => item.id === id);
+
+        setWishes(updated);
+        saveToLocalStorage(updated);
+        await putItem(updatedItem); // Збереження зміни purchased в IndexedDB
     }
 
-    function changePriority(id, newPriority) {
-        setWishes(wishes.map(item => 
+    async function changePriority(id, newPriority) {
+        const updated = wishes.map(item => 
             item.id === id ? { ...item, priority: newPriority } : item
-        ));
+        );
+        const updatedItem = updated.find(item => item.id === id);
+
+        setWishes(updated);
+        saveToLocalStorage(updated);
+        await putItem(updatedItem);
     }
 
     async function loadData() {
@@ -291,6 +433,12 @@ function WishlistApp() {
             }));
 
             setWishes(formattedWishes);
+            saveToLocalStorage(formattedWishes);
+
+            // Синхронізуємо завантажені дані з IndexedDB
+            for (const item of formattedWishes) {
+                await putItem(item);
+            }
         } catch (err) {
             setError('Не вдалося завантажити дані з сервера.');
             console.error(err);
@@ -299,8 +447,7 @@ function WishlistApp() {
         }
     }
 
-    function handleAddWish(e) {
-        // Валідація на подію input
+    async function handleAddWish(e) {
         e.preventDefault();
         if (!title.trim() || price === '' || Number(price) < 0) {
             alert("Будь ласка, заповніть усі поля коректно!");
@@ -315,12 +462,21 @@ function WishlistApp() {
             purchased: false
         };
 
-        setWishes([...wishes, newWish]);
+        const updated = [...wishes, newWish];
+        setWishes(updated);
+        saveToLocalStorage(updated);
+        await putItem(newWish); // Додавання запису в IndexedDB
 
-        // Очищення полів
         setTitle('');
         setPrice('');
         setPriority('середній');
+    }
+
+    async function deleteWish(id) {
+        const updated = wishes.filter(item => item.id !== id);
+        setWishes(updated);
+        saveToLocalStorage(updated);
+        await deleteItem(id);
     }
 
     function totalSum(data) {
@@ -416,6 +572,7 @@ function WishlistApp() {
                                     isPurchased={wish.purchased}
                                     onToggle={toggleWish}
                                     onChangePriority={changePriority}
+                                    onDelete={deleteWish}
                                 />
                             ))}
                         </div>

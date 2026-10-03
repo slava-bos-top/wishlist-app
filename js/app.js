@@ -296,7 +296,7 @@ async function migrateFromLocalStorageIfNeeded() {
 
 // Дочірній компонент елемента
 // Props: id, name, price, priority, isPurchased, onToggle, onChangePriority
-function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePriority, onDelete }) {
+function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggle, onChangePriority, onChangeSavedAmount, onDelete }) {
     let priorityClass = 'priority-medium';
     if (priority === 'високий') {
         priorityClass = 'priority-high';
@@ -305,17 +305,49 @@ function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePr
         priorityClass = 'priority-low';
     }
 
+    // Розрахунок відсотка для transition-анімації
+    const currentSaved = savedAmount || 0;
+    const progressPercent = price > 0 ? Math.min(100, Math.round((currentSaved / price) * 100)) : 0;
+
     return (
         <article className={`card ${priorityClass} ${isPurchased ? 'bought' : ''}`}>
             <h3>{name}</h3>
             <p>{price} $</p>
 
-            <label htmlFor="wish-priority">Пріоритет:</label>
-                <select 
-                    id="wish-priority" 
-                    value={priority} 
-                    onChange={(e) => onChangePriority(id, e.target.value)}
-                >
+            {/* Блок анімованого прогрес-бару */}
+            <div className="progress-container">
+                <div className="progress-label">
+                    <span>Накопичено: {currentSaved} $</span>
+                    <span>{progressPercent}%</span>
+                </div>
+                <div className="progress-bar">
+                    <div 
+                        className={`progress-bar__fill ${progressPercent >= 100 ? 'badge--completed' : ''}`} 
+                        style={{ width: `${progressPercent}%` }}
+                    ></div>
+                </div>
+            </div>
+
+            {/* Введення внесеної суми */}
+            <div style={{ marginTop: '10px' }}>
+                <label htmlFor={`saved-${id}`}>Внести накопичення ($):</label>
+                <input 
+                    type="number" 
+                    id={`saved-${id}`}
+                    value={currentSaved} 
+                    min="0"
+                    max={price}
+                    onChange={(e) => onChangeSavedAmount(id, Number(e.target.value))}
+                    style={{ width: '100%', padding: '5px', marginTop: '4px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+            </div>
+
+            <label htmlFor={`wish-priority-${id}`} style={{ marginTop: '10px', display: 'block' }}>Пріоритет:</label>
+            <select 
+                id={`wish-priority-${id}`} 
+                value={priority} 
+                onChange={(e) => onChangePriority(id, e.target.value)}
+            >
                 <option value="високий">Високий</option>
                 <option value="середній">Середній</option>
                 <option value="низький">Низький</option>
@@ -344,9 +376,9 @@ function WishItem({ id, name, price, priority, isPurchased, onToggle, onChangePr
 
 function WishlistApp() {
     const [wishes, setWishes] = React.useState([
-        { id: 1, title: "Машина", price: 18000, priority: "високий", purchased: false },
-        { id: 2, title: "Яхта", price: 38000, priority: "середній", purchased: false },
-        { id: 3, title: "Ноутбук", price: 500, priority: "низький", purchased: true }
+        { id: 1, title: "Машина", price: 18000, savedAmount: 4500, priority: "високий", purchased: false },
+        { id: 2, title: "Яхта", price: 38000, savedAmount: 0, priority: "середній", purchased: false },
+        { id: 3, title: "Ноутбук", price: 500, savedAmount: 500, priority: "низький", purchased: true }
     ]);
 
     const [title, setTitle] = React.useState('');
@@ -369,12 +401,12 @@ function WishlistApp() {
             // Якщо БД порожня — ініціалізуємо базовими значеннями
             if (items.length === 0) {
                 items = [
-                { id: 1, title: "Машина", price: 18000, priority: "високий", purchased: false },
-                { id: 2, title: "Яхта", price: 38000, priority: "середній", purchased: false },
-                { id: 3, title: "Ноутбук", price: 500, priority: "низький", purchased: true }
+                    { id: 1, title: "Машина", price: 18000, savedAmount: 4500, priority: "високий", purchased: false },
+                    { id: 2, title: "Яхта", price: 38000, savedAmount: 0, priority: "середній", purchased: false },
+                    { id: 3, title: "Ноутбук", price: 500, savedAmount: 500, priority: "низький", purchased: true }
                 ];
                 for (const item of items) {
-                await putItem(item);
+                    await putItem(item);
                 }
             }
 
@@ -414,6 +446,33 @@ function WishlistApp() {
         await putItem(updatedItem);
     }
 
+    // Зміна суми накопичення та плавний перерахунок
+    async function changeSavedAmount(id, amount) {
+        const updated = wishes.map(item => {
+            if (item.id === id) {
+                const newSaved = Math.max(0, amount);
+                const isNowPurchased = newSaved >= item.price;
+                return { ...item, savedAmount: newSaved, purchased: isNowPurchased };
+            }
+            return item;
+        });
+        const updatedItem = updated.find(item => item.id === id);
+
+        setWishes(updated);
+        saveToLocalStorage(updated);
+        await putItem(updatedItem);
+    }
+
+    async function clearDB() {
+        const db = await openDB();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('wishes', 'readwrite');
+            tx.objectStore('wishes').clear();
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
+    }
+
     async function loadData() {
         setLoading(true);
         setError('');
@@ -424,16 +483,23 @@ function WishlistApp() {
             }
             const data = await response.json();
 
-            const formattedWishes = data.map((item, index) => ({
-                id: item.id,
-                title: item.title,
-                price: (index + 1) * 100,
-                priority: item.completed ? 'низький' : 'високий',
-                purchased: item.completed
-            }));
+            const formattedWishes = data.map((item, index) => {
+                const itemPrice = (index + 1) * 100;
+                return {
+                    id: item.id,
+                    title: item.title,
+                    price: itemPrice,
+                    savedAmount: item.completed ? itemPrice : 0, // << НОВЕ ПОЛЕ
+                    priority: item.completed ? 'низький' : 'високий',
+                    purchased: item.completed
+                };
+            });
 
             setWishes(formattedWishes);
             saveToLocalStorage(formattedWishes);
+
+            // Очищаємо застарілі дані в IndexedDB перед записом нових з API
+            await clearDB();
 
             // Синхронізуємо завантажені дані з IndexedDB
             for (const item of formattedWishes) {
@@ -458,6 +524,7 @@ function WishlistApp() {
             id: Date.now(),
             title: title.trim(),
             price: Number(price),
+            savedAmount: 0,
             priority: priority,
             purchased: false
         };
@@ -568,10 +635,12 @@ function WishlistApp() {
                                     id={wish.id}
                                     name={wish.title}
                                     price={wish.price}
+                                    savedAmount={wish.savedAmount} 
                                     priority={wish.priority}
                                     isPurchased={wish.purchased}
                                     onToggle={toggleWish}
                                     onChangePriority={changePriority}
+                                    onChangeSavedAmount={changeSavedAmount}
                                     onDelete={deleteWish}
                                 />
                             ))}

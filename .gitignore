@@ -7,4 +7,6 @@
 .vscode/
 
 # Системні файли
+node_modules/
 .DS_Store
+*.log

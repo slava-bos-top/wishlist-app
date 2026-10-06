@@ -246,45 +246,45 @@ aside p {
 
 /* Універсальні кнопки навігації */
 .btn-nav {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: all 0.2s ease-in-out;
-  cursor: pointer;
-  border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+    border: none;
 }
 
 /* Кнопка "Переглянути деталі" (на картці) */
 .btn-nav--detail {
-  margin-top: 12px;
-  background-color: #f0f4f8;
-  color: #2c3e50;
-  border: 1px solid #dcdfe6;
+    margin-top: 12px;
+    background-color: #f0f4f8;
+    color: #2c3e50;
+    border: 1px solid #dcdfe6;
 }
 
 .btn-nav--detail:hover {
-  background-color: #e2e8f0;
-  color: #1a202c;
-  transform: translateY(-1px);
+    background-color: #e2e8f0;
+    color: #1a202c;
+    transform: translateY(-1px);
 }
 
 /* Кнопки повернення назад ("Назад до списку", "Назад до всіх бажань") */
 .btn-nav--back {
-  margin-top: 16px;
-  background-color: var(--pink-color);
-  color: #fff;
-  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
+    margin-top: 16px;
+    background-color: var(--pink-color);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.2);
 }
 
 .btn-nav--back:hover {
-  background-color: var(--pink-btn-hover);
-  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
-  transform: translateY(-1px);
+    background-color: var(--pink-btn-hover);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+    transform: translateY(-1px);
 }
 
 /* Послідовність станів для анімації досягнення 100% цілі (@keyframes) */

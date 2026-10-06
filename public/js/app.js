@@ -204,25 +204,26 @@
 
 // Обрано React за його декларативний підхід, зручну роботу зі станом через hooks (useState) та відсутність потреби вручну маніпулювати DOM-вузлами.
 // json файл API (https://jsonplaceholder.typicode.com/todos?userId=2)
-const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=2"
+// const API_URL = "https://jsonplaceholder.typicode.com/todos?userId=2"
+const API_URL = "/api/wishes";
 
 // Допоміжні функції для localStorage
 function saveToLocalStorage(items) {
-  try {
-    localStorage.setItem('wishes', JSON.stringify(items));
-  } catch (e) {
-    console.error('Помилка запису в localStorage:', e);
-  }
+    try {
+        localStorage.setItem('wishes', JSON.stringify(items));
+    } catch (e) {
+        console.error('Помилка запису в localStorage:', e);
+    }
 }
 
 function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem('wishes');
-    return raw ? JSON.parse(raw) : [];
-  } catch (error) {
-    console.error('Пошкоджені дані в localStorage:', error);
-    return [];
-  }
+    try {
+        const raw = localStorage.getItem('wishes');
+        return raw ? JSON.parse(raw) : [];
+    } catch (error) {
+        console.error('Пошкоджені дані в localStorage:', error);
+        return [];
+    }
 }
 
 function openDB() {
@@ -310,8 +311,8 @@ async function migrateFromLocalStorageIfNeeded() {
 }
 
 // Дочірній компонент елемента
-// Props: id, name, price, priority, isPurchased, onToggle, onChangePriority
-function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggle, onChangePriority, onChangeSavedAmount, onDelete }) {
+// Props: id, name, price, priority, isPurchased, onToggle, onChangePriority, onNavigate
+function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggle, onChangePriority, onChangeSavedAmount, onDelete, onNavigate }) {
     let priorityClass = 'priority-medium';
     if (priority === 'високий') {
         priorityClass = 'priority-high';
@@ -320,7 +321,6 @@ function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggl
         priorityClass = 'priority-low';
     }
 
-    // Розрахунок відсотка для transition-анімації
     const currentSaved = savedAmount || 0;
     const progressPercent = price > 0 ? Math.min(100, Math.round((currentSaved / price) * 100)) : 0;
 
@@ -329,7 +329,6 @@ function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggl
             <h3>{name}</h3>
             <p>{price} $</p>
 
-            {/* Блок анімованого прогрес-бару */}
             <div className="progress-container">
                 <div className="progress-label">
                     <span>Накопичено: {currentSaved} $</span>
@@ -343,7 +342,6 @@ function WishItem({ id, name, price, savedAmount, priority, isPurchased, onToggl
                 </div>
             </div>
 
-            {/* Введення внесеної суми */}
             <div style={{ marginTop: '10px' }}>
                 <label htmlFor={`saved-${id}`}>Внести накопичення ($):</label>
                 <input 
@@ -430,14 +428,16 @@ function WishDetailView({ id, wishes, onNavigate }) {
             <p><strong>Накопичено:</strong> {wish.savedAmount || 0} $</p>
             <p><strong>Пріоритет:</strong> {wish.priority}</p>
             <p><strong>Статус:</strong> {wish.purchased ? 'Придбано' : 'Ще не придбано'}</p>
-            {wish.url && (
-                <p>
-                    <strong>Посилання:</strong>{' '}
+            <p>
+                <strong>Посилання (URL):</strong>{' '}
+                {wish.url ? (
                     <a href={wish.url} target="_blank" rel="noreferrer">
-                        Перейти до товару
+                        {wish.url}
                     </a>
-                </p>
-            )}
+                ) : (
+                    <span>Посилання відсутнє</span>
+                )}
+            </p>
             <br />
             <a 
                 href="#/" 
@@ -495,6 +495,7 @@ function WishlistApp() {
     const [wishes, setWishes] = React.useState([]);
     const [title, setTitle] = React.useState('');
     const [price, setPrice] = React.useState('');
+    const [url, setUrl] = React.useState('');
     const [priority, setPriority] = React.useState('середній');
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState('');
@@ -512,47 +513,45 @@ function WishlistApp() {
         const pathParts = path.split('/').filter(Boolean);
         
         for (const route of routes) {
-        const routeParts = route.path.split('/').filter(Boolean);
-        if (routeParts.length !== pathParts.length) continue;
-        
-        const params = {};
-        const isMatch = routeParts.every((part, i) => {
-            if (part.startsWith(':')) {
-            params[part.slice(1)] = pathParts[i];
-            return true;
-            }
-            return part === pathParts[i];
-        });
+            const routeParts = route.path.split('/').filter(Boolean);
+            if (routeParts.length !== pathParts.length) continue;
+            
+            const params = {};
+            const isMatch = routeParts.every((part, i) => {
+                if (part.startsWith(':')) {
+                params[part.slice(1)] = pathParts[i];
+                return true;
+                }
+                return part === pathParts[i];
+            });
 
-        if (isMatch) return { view: route.view, params };
+            if (isMatch) return { view: route.view, params };
         }
         return null;
     }
 
     React.useEffect(() => {
         async function initData() {
-        setLoading(true);
-        try {
-            await migrateFromLocalStorageIfNeeded();
-            let items = await getAllItems();
+            setLoading(true);
+            try {
+                await migrateFromLocalStorageIfNeeded();
+                let items = await getAllItems();
 
-            if (items.length === 0) {
-            items = [
-                { id: 1, title: "Машина", price: 18000, savedAmount: 4500, priority: "високий", purchased: false },
-                { id: 2, title: "Яхта", price: 38000, savedAmount: 0, priority: "середній", purchased: false },
-                { id: 3, title: "Ноутбук", price: 500, savedAmount: 500, priority: "низький", purchased: true }
-            ];
-            await putItemsBulk(items);
+                if (items.length === 0) {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) throw new Error(`Помилка сервера: ${response.status}`);
+                    items = await response.json();
+                    await putItemsBulk(items);
+                }
+
+                setWishes(items);
+                saveToLocalStorage(items);
+            } catch (err) {
+                setError('Не вдалося відкрити сховище IndexedDB. Перевірте, чи не увімкнено приватний режим.');
+                console.error(err);
+            } finally {
+                setLoading(false);
             }
-
-            setWishes(items);
-            saveToLocalStorage(items);
-        } catch (err) {
-            setError('Не вдалося відкрити сховище IndexedDB. Перевірте, чи не увімкнено приватний режим.');
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
         }
 
         initData();
@@ -560,7 +559,7 @@ function WishlistApp() {
 
     React.useEffect(() => {
         const handleHashChange = () => {
-        setCurrentHash(window.location.hash || '#/');
+            setCurrentHash(window.location.hash || '#/');
         };
 
         window.addEventListener('hashchange', handleHashChange);
@@ -573,7 +572,7 @@ function WishlistApp() {
 
     async function toggleWish(id) {
         const updated = wishes.map(item => 
-        item.id === id ? { ...item, purchased: !item.purchased } : item
+            item.id === id ? { ...item, purchased: !item.purchased } : item
         );
         const updatedItem = updated.find(item => item.id === id);
 
@@ -584,7 +583,7 @@ function WishlistApp() {
 
     async function changePriority(id, newPriority) {
         const updated = wishes.map(item => 
-        item.id === id ? { ...item, priority: newPriority } : item
+            item.id === id ? { ...item, priority: newPriority } : item
         );
         const updatedItem = updated.find(item => item.id === id);
 
@@ -595,12 +594,12 @@ function WishlistApp() {
 
     async function changeSavedAmount(id, amount) {
         const updated = wishes.map(item => {
-        if (item.id === id) {
-            const newSaved = Math.max(0, amount);
-            const isNowPurchased = newSaved >= item.price;
-            return { ...item, savedAmount: newSaved, purchased: isNowPurchased };
-        }
-        return item;
+            if (item.id === id) {
+                const newSaved = Math.max(0, amount);
+                const isNowPurchased = newSaved >= item.price;
+                return { ...item, savedAmount: newSaved, purchased: isNowPurchased };
+            }
+            return item;
         });
         const updatedItem = updated.find(item => item.id === id);
 
@@ -613,48 +612,42 @@ function WishlistApp() {
         setLoading(true);
         setError('');
         try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error(`Сервер відповів кодом ${response.status}`);
-        const data = await response.json();
+            const response = await fetch(API_URL);
 
-        const formattedWishes = data.map((item, index) => {
-            const itemPrice = (index + 1) * 100;
-            return {
-            id: item.id,
-            title: item.title,
-            price: itemPrice,
-            savedAmount: item.completed ? itemPrice : 0,
-            priority: item.completed ? 'низький' : 'високий',
-            purchased: item.completed
-            };
-        });
+            if (!response.ok) {
+                throw new Error(`Помилка сервера: ${response.status}`);
+            }
 
-        setWishes(formattedWishes);
-        saveToLocalStorage(formattedWishes);
-        await clearDB();
-        await putItemsBulk(formattedWishes);
+            const data = await response.json();
+
+            await clearDB();
+            await putItemsBulk(data);
+
+            setWishes(data);
+            saveToLocalStorage(data);
         } catch (err) {
-        setError('Не вдалося завантажити дані з сервера.');
-        console.error(err);
+            console.error('Помилка завантаження бажань з API:', err);
+            setError('Помилка завантаження даних з API');
         } finally {
-        setLoading(false);
+            setLoading(false);
         }
     }
 
     async function handleAddWish(e) {
         e.preventDefault();
         if (!title.trim() || price === '' || Number(price) < 0) {
-        alert("Будь ласка, заповніть усі поля коректно!");
-        return;
+            alert("Будь ласка, заповніть усі поля коректно!");
+            return;
         }
 
         const newWish = {
-        id: Date.now(),
-        title: title.trim(),
-        price: Number(price),
-        savedAmount: 0,
-        priority: priority,
-        purchased: false
+            id: Date.now(),
+            title: title.trim(),
+            price: Number(price),
+            url: url.trim() || 'https://example.com', // <--- Додано URL
+            savedAmount: 0,
+            priority: priority,
+            purchased: false
         };
 
         const updated = [...wishes, newWish];
@@ -664,6 +657,7 @@ function WishlistApp() {
 
         setTitle('');
         setPrice('');
+        setUrl('');
         setPriority('середній');
     }
 
@@ -715,19 +709,25 @@ function WishlistApp() {
                 <h2>Додати бажання</h2>
                 <form onSubmit={handleAddWish} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '400px' }}>
                     <input 
-                    type="text" 
-                    placeholder="Назва бажання" 
-                    value={title} 
-                    onChange={(e) => setTitle(e.target.value)} 
-                    required 
+                        type="text" 
+                        placeholder="Назва бажання" 
+                        value={title} 
+                        onChange={(e) => setTitle(e.target.value)} 
+                        required 
                     />
                     <input 
-                    type="number" 
-                    placeholder="Ціна ($)" 
-                    value={price} 
-                    min="0"
-                    onChange={(e) => setPrice(e.target.value)} 
-                    required 
+                        type="number" 
+                        placeholder="Ціна ($)" 
+                        value={price} 
+                        min="0"
+                        onChange={(e) => setPrice(e.target.value)} 
+                        required 
+                    />
+                    <input 
+                        type="url" 
+                        placeholder="Посилання на товар (URL)" 
+                        value={url} 
+                        onChange={(e) => setUrl(e.target.value)} 
                     />
                     <select value={priority} onChange={(e) => setPriority(e.target.value)}>
                     <option value="високий">Високий</option>

@@ -1,0 +1,47 @@
+[
+    {
+        "id": 1,
+        "title": "Бездротові навушники",
+        "price": 150,
+        "savedAmount": 150,
+        "priority": "високий",
+        "purchased": true,
+        "url": "https://example.com/headphones"
+    },
+    {
+        "id": 2,
+        "title": "Механічна клавіатура",
+        "price": 120,
+        "savedAmount": 60,
+        "priority": "середній",
+        "purchased": false,
+        "url": "https://example.com/keyboard"
+    },
+    {
+        "id": 3,
+        "title": "Смарт-годинник",
+        "price": 250,
+        "savedAmount": 0,
+        "priority": "високий",
+        "purchased": false,
+        "url": "https://example.com/watch"
+    },
+    {
+        "id": 4,
+        "title": "Крісло геймерське",
+        "price": 300,
+        "savedAmount": 300,
+        "priority": "низький",
+        "purchased": true,
+        "url": "https://example.com/chair"
+    },
+    {
+        "id": 5,
+        "title": "Монітор 27 дюймів",
+        "price": 400,
+        "savedAmount": 100,
+        "priority": "середній",
+        "purchased": false,
+        "url": "https://example.com/monitor"
+    }
+]
